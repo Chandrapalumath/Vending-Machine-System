@@ -33,7 +33,7 @@ namespace DataLayer.Repositories.FileSystem
             await WriteAllLinesAsync(lines);
         }
 
-        internal async Task<User?> GetByUserNameAsync(string userName)
+        public async Task<User?> GetByUserNameAsync(string userName)
         {
             if (string.IsNullOrWhiteSpace(userName)) return null;
             var users = await GetAllAsync();

@@ -47,6 +47,7 @@ namespace Backend.Services
             await _addItems.AddAsync(item);
         }
 
+        // Check hasvalue and value in nullables
         public async Task UpdateItemAsync(string name, string? newName, float? newPrice, int? newQuantity)
         {
             var items = await _getItems.GetAllAsync();

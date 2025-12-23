@@ -11,10 +11,7 @@ namespace Vending_Machine_System.Menus
         private readonly ITransactionService _transactionService;
         private readonly IUserService _userService;
 
-        public AdminMenu(
-            IItemService itemService,
-            ITransactionService transactionService,
-            IUserService userService)
+        public AdminMenu(IItemService itemService, ITransactionService transactionService, IUserService userService)
         {
             _itemService = itemService;
             _transactionService = transactionService;

@@ -42,7 +42,6 @@ namespace DataLayer.Repositories.FileSystem
 
             return transaction;
         }
-
         private static string ToLine(Transaction transaction) =>
             $"{transaction.UserName},{transaction.ItemsCsv},{transaction.PricesCsv},{transaction.QuantitiesCsv},{transaction.TotalAmount},{transaction.TimeUtc:o}";
     }

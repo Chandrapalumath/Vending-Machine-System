@@ -1,7 +1,8 @@
 ﻿using Backend.Interfaces;
+using Backend.Model;
+using System.Xml.Linq;
 using Vending_Machine_System.Helpers;
 using Vending_Machine_System.Models.Enums;
-using Backend.Model;
 
 namespace Vending_Machine_System.Menus
 {
@@ -12,11 +13,7 @@ namespace Vending_Machine_System.Menus
         private readonly ITransactionService _transactionService;
         private readonly IUserService _userService;
 
-        public UserMenu(
-            User currentUser,
-            IItemService itemService,
-            ITransactionService transactionService,
-            IUserService userService)
+        public UserMenu(User currentUser, IItemService itemService, ITransactionService transactionService, IUserService userService)
         {
             _currentUser = currentUser;
             _itemService = itemService;
@@ -77,95 +74,158 @@ namespace Vending_Machine_System.Menus
             }
             InputHelper.Pause();
         }
-
         private async Task BuyItemsAsync()
         {
-            var items = await _itemService.GetAllItemsAsync();
-            var selectedItems = new List<string>();
-            var selectedPrices = new List<float>();
-            var selectedQuantities = new List<int>();
+            var chosenItems = new List<string>();
+            var chosenPrices = new List<float>();
+            var chosenQty = new List<int>();
 
-            Console.Clear();
-            Console.WriteLine("=== SHOPPING CART ===");
+            var cartQuantities = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             while (true)
             {
-                ShowAvailableItems(items);
-                Console.Write("\nEnter item ID or 'exit': ");
+                var items = await _itemService.GetAllItemsAsync();
+
+                Console.Clear();
+                Console.WriteLine("Available items:");
+                Console.WriteLine("{0,-5} {1,-12} {2,-8} {3,-8}", "Idx", "Item", "Price", "Qty");
+
+                for (int i = 0; i < items.Count; i++)
+                {
+                    var item = items[i];
+                    var alreadySelected = cartQuantities.GetValueOrDefault(item.Name, 0);
+                    var available = item.Quantity - alreadySelected;
+
+                    if (available > 0)
+                    {
+                        Console.WriteLine("{0,-5} {1,-12} {2,-8} {3,-8}",
+                            i, item.Name, item.Price, available);
+                    }
+                }
+
+                Console.Write("\nEnter item index to buy or 'exit': ");
                 var input = Console.ReadLine()?.Trim().ToLower();
 
-                if (input == "exit") break;
+                if (input == "exit")
+                    break;
 
-                if (!int.TryParse(input, out var index) || index < 0 || index >= items.Count || items[index].Quantity <= 0)
+                if (!int.TryParse(input, out var index) || index < 0 || index >= items.Count)
                 {
-                    Console.WriteLine("Invalid selection or out of stock!");
+                    Console.WriteLine("Invalid index.");
+                    InputHelper.Pause();
                     continue;
                 }
 
-                var qty = InputHelper.PromptPositiveInt($"Quantity for {items[index].Name}: ");
-                if (qty > items[index].Quantity)
+                var selectedItem = items[index];
+                var alreadyInCart = cartQuantities.GetValueOrDefault(selectedItem.Name, 0);
+                var availableQty = selectedItem.Quantity - alreadyInCart;
+
+                if (availableQty <= 0)
                 {
-                    Console.WriteLine($"Only {items[index].Quantity} available!");
+                    Console.WriteLine("Item already fully selected.");
+                    InputHelper.Pause();
                     continue;
                 }
 
-                selectedItems.Add(items[index].Name);
-                selectedPrices.Add(items[index].Price);
-                selectedQuantities.Add(qty);
-                Console.WriteLine($"Added {qty}   {items[index].Name}");
+                var quantity = InputHelper.PromptPositiveInt(
+                    $"Enter quantity for {selectedItem.Name} (Available: {availableQty}): ");
+
+                if (quantity > availableQty)
+                {
+                    Console.WriteLine("Not enough stock available.");
+                    InputHelper.Pause();
+                    continue;
+                }
+                cartQuantities[selectedItem.Name] = alreadyInCart + quantity;
+
+                chosenItems.Add(selectedItem.Name);
+                chosenPrices.Add(selectedItem.Price);
+                chosenQty.Add(quantity);
+
+                Console.WriteLine($"Added {quantity} x {selectedItem.Name}");
+                InputHelper.Pause();
             }
 
-            if (selectedItems.Count == 0)
+            if (chosenItems.Count == 0)
             {
                 Console.WriteLine("No items selected.");
                 InputHelper.Pause();
                 return;
             }
+            float totalAmount = 0;
+            for (int i = 0; i < chosenItems.Count; i++)
+                totalAmount += chosenPrices[i] * chosenQty[i];
 
-            var totalAmount = selectedItems.Select((name, i) => selectedPrices[i] * selectedQuantities[i]).Sum();
-            Console.WriteLine($"\nTotal: ${totalAmount:F2}");
-
-            if (totalAmount > _currentUser.Wallet)
+            while (true)
             {
-                Console.WriteLine($"Insufficient funds! Need: ${totalAmount:F2}, Have: ${_currentUser.Wallet:F2}");
-                if (InputHelper.Confirm("Add money now?"))
-                    await AddMoneyAsync();
-                return;
-            }
+                Console.Clear();
+                Console.WriteLine($"Total Amount: ${totalAmount:F2}");
+                Console.WriteLine($"Wallet Balance: ${_currentUser.Wallet:F2}");
 
-            try
-            {
+                if (totalAmount > _currentUser.Wallet)
+                {
+                    Console.WriteLine("Insufficient wallet balance.");
+                    if (InputHelper.Confirm("Add money to wallet?"))
+                    {
+                        await AddMoneyAsync();
+                        continue;
+                    }
+
+                    Console.WriteLine("Order cancelled.");
+                    InputHelper.Pause();
+                    return;
+                }
+
+                var finalItems = await _itemService.GetAllItemsAsync();
+                bool conflict = false;
+
+                foreach (var kvp in cartQuantities)
+                {
+                    var item = finalItems.FirstOrDefault(x =>
+                        x.Name.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase));
+
+                    if (item == null || item.Quantity < kvp.Value)
+                    {
+                        conflict = true;
+                        break;
+                    }
+                }
+
+                if (conflict)
+                {
+                    Console.WriteLine("Item quantity changed. Please try again.");
+                    InputHelper.Pause();
+                    return;
+                }
+
+                foreach (var kvp in cartQuantities)
+                {
+                    var item = finalItems.First(x =>
+                        x.Name.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase));
+
+                    item.Quantity -= kvp.Value;
+                }
+
+                foreach (var item in finalItems) { 
+                    await _itemService.UpdateItemAsync(item.Name, null, null, item.Quantity); 
+                }
+
+                _currentUser.Wallet -= totalAmount;
+                await _userService.UpdateUserWalletAsync(
+                    _currentUser.UserName, _currentUser.Wallet);
+
                 var transaction = new Transaction(
                     _currentUser.UserName,
-                    selectedItems.ToArray(),
-                    selectedPrices.ToArray(),
-                    selectedQuantities.ToArray(),
+                    chosenItems.ToArray(),
+                    chosenPrices.ToArray(),
+                    chosenQty.ToArray(),
                     totalAmount);
 
                 await _transactionService.AddTransactionAsync(transaction);
 
-                _currentUser.Wallet -= totalAmount;
-                await _userService.UpdateUserWalletAsync(_currentUser.UserName, _currentUser.Wallet);
-
-                Console.WriteLine("Purchase successful! Thank you!");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Purchase failed: {ex.Message}");
-            }
-            InputHelper.Pause();
-        }
-
-        private void ShowAvailableItems(List<Item> items)
-        {
-            Console.WriteLine("\nAvailable Items:");
-            Console.WriteLine("{0,-4} {1,-20} {2,-8} {3,-8}", "ID", "Item", "Price", "Stock");
-            Console.WriteLine(new string('-', 45));
-
-            for (int i = 0; i < items.Count; i++)
-            {
-                if (items[i].Quantity > 0)
-                    Console.WriteLine("{0,-4} {1,-20} ${2,-7:F2} {3,-7}", i, items[i].Name, items[i].Price, items[i].Quantity);
+                Console.WriteLine("Purchase successful! Items dispensed.");
+                InputHelper.Pause();
+                return;
             }
         }
 
@@ -215,7 +275,7 @@ namespace Vending_Machine_System.Menus
         private async Task ResetPasswordAsync()
         {
             Console.Clear();
-            Console.WriteLine("🔑 === RESET PASSWORD ===");
+            Console.WriteLine("=== RESET PASSWORD ===");
 
             var currentPassword = InputHelper.PromptPassword("Current password: ");
             var user = await _userService.ValidateUserAsync(_currentUser.UserName, currentPassword);
