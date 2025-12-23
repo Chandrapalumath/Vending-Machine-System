@@ -4,7 +4,7 @@ using DataLayer.Models;
 
 namespace DataLayer.Repositories.FileSystem
 {
-    public class FileUserRepository : FileRepositoryBase, IGetData<User>, IAddData<User>, ISaveAllData<User>
+    public class FileUserRepository : FileRepositoryBase, IUserRepository
     {
         public FileUserRepository() : base(DataFilePaths.UsersFile) { }
         public async Task<List<User>> GetAllAsync()

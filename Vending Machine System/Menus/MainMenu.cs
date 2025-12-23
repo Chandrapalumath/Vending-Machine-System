@@ -9,21 +9,22 @@ namespace Vending_Machine_System.Menus
         private readonly IUserService _userService;
         private readonly IItemService _itemService;
         private readonly ITransactionService _transactionService;
+        private readonly IAdminService _adminService;
 
-        public MainMenu(IUserService userService, IItemService itemService, ITransactionService transactionService)
+        public MainMenu(IUserService userService, IItemService itemService, ITransactionService transactionService, IAdminService adminService)
         {
             _userService = userService;
             _itemService = itemService;
             _transactionService = transactionService;
+            _adminService = adminService;
         }
 
-        public async Task RunAsync()
+        public async Task StartAsync()
         {
             Console.WriteLine("WELCOME FROM VENDING MACHINE");
 
             while (true)
             {
-                Console.Clear();
                 ShowMenu();
                 var choice = InputHelper.PromptInt("Choice", 1, (int)MainMenuOption.Exit);
 
@@ -57,16 +58,16 @@ namespace Vending_Machine_System.Menus
             Console.Write("Admin password: ");
             var password = InputHelper.PromptPassword("");
 
-            if (username == "Admin" && password == "Admin@123")
+            var admin = await _adminService.ValidateAdminAsync(username, password);
+            if (admin != null)
             {
-                Console.WriteLine("Admin login successful!");
-                InputHelper.Pause();
+                Console.WriteLine($"Welcome, {admin.UserName}!");
                 var adminMenu = new AdminMenu(_itemService, _transactionService, _userService);
                 await adminMenu.RunAsync();
             }
             else
             {
-                Console.WriteLine("Invalid admin credentials!");
+                Console.WriteLine("Invalid username or password!");
                 InputHelper.Pause();
             }
         }

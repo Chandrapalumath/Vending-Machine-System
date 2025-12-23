@@ -3,7 +3,7 @@ using DataLayer.Repositories.Interfaces;
 using DataLayer.Models;
 namespace DataLayer.Repositories.FileSystem
 {
-    public class FileTransactionRepository : FileRepositoryBase, IAddData<Transaction>, IGetData<Transaction>
+    public class FileTransactionRepository : FileRepositoryBase, ITransactionRepository
     {
         public FileTransactionRepository() : base(DataFilePaths.TransactionsFile) { }
         public async Task AddAsync(Transaction transaction)

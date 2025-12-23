@@ -1,5 +1,7 @@
-﻿using Backend.Services;
+﻿using Backend.Interfaces;
+using Backend.Services;
 using DataLayer.Repositories.FileSystem;
+using DataLayer.Repositories.Interfaces;
 using Vending_Machine_System.Menus;
 
 namespace UserInterface
@@ -8,17 +10,18 @@ namespace UserInterface
     {
         static async Task Main(string[] args)
         {
-            var userRepo = new FileUserRepository();
-            var itemRepo = new FileItemRepository();
-            var transactionRepo = new FileTransactionRepository();
+            IUserRepository userRepo = new FileUserRepository();
+            IItemRepository itemRepo = new FileItemRepository();
+            ITransactionRepository transactionRepo = new FileTransactionRepository();
+            IAdminRepository adminrepo = new FileAdminRepository();
 
-            // Change why to pass that much of arguments
-            var userService = new UserService(userRepo, userRepo, userRepo);
-            var itemService = new ItemService(itemRepo, itemRepo, itemRepo);
-            var transactionService = new TransactionService(transactionRepo, userRepo, itemRepo, transactionRepo);
+            IUserService userService = new UserService(userRepo);
+            IItemService itemService = new ItemService(itemRepo);
+            IAdminService adminservice = new AdminService(adminrepo);
+            ITransactionService transactionService = new TransactionService(userRepo,transactionRepo,itemRepo);
 
-            var mainMenu = new MainMenu(userService, itemService, transactionService);
-            await mainMenu.RunAsync();
+            var mainMenu = new MainMenu(userService, itemService, transactionService, adminservice);
+            await mainMenu.StartAsync();
         }
     }
 }

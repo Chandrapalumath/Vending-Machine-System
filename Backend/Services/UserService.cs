@@ -8,19 +8,15 @@ namespace Backend.Services
 {
     public class UserService : IUserService
     {
-        private readonly IGetData<entity.User> _getUsers;
-        private readonly IAddData<entity.User> _addUsers;
-        private readonly ISaveAllData<entity.User> _saveUsers;
+        private readonly IUserRepository _userRepository;
         private const int MinUserNameLength = 3;
         private const int MaxUserNameLength = 30;
         private const int MinPasswordLength = 12;
         private const int MaxPasswordLength = 20;
 
-        public UserService( IGetData<entity.User> getUsers, IAddData<entity.User> addUsers, ISaveAllData<entity.User> saveUsers)
+        public UserService(IUserRepository userRepository)
         {
-            _getUsers = getUsers;
-            _addUsers = addUsers;
-            _saveUsers = saveUsers;
+            _userRepository = userRepository;
         }
 
         public async Task<User?> ValidateUserAsync(string userName, string password)
@@ -28,7 +24,7 @@ namespace Backend.Services
             if (!IsValidUserName(userName) || !IsValidPassword(password))
                 return null;
 
-            var users = await _getUsers.GetAllAsync();
+            var users = await _userRepository.GetAllAsync();
             var user = users.SingleOrDefault(u =>
                 u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase) &&
                 u.Password == password);
@@ -38,7 +34,7 @@ namespace Backend.Services
 
         public async Task<bool> IsUserExistsAsync(string userName)
         {
-            var users = await _getUsers.GetAllAsync();
+            var users = await _userRepository.GetAllAsync();
             return users.Any(u => u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -58,24 +54,24 @@ namespace Backend.Services
                 Wallet = 0f
             };
 
-            await _addUsers.AddAsync(newUser);
+            await _userRepository.AddAsync(newUser);
         }
 
         public async Task UpdateUserWalletAsync(string userName, float wallet)
         {
-            var users = await _getUsers.GetAllAsync();
+            var users = await _userRepository.GetAllAsync();
             var user = users.SingleOrDefault(u => u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase));
 
             if (user == null)
                 throw new UserNotFoundException("User not found.");
 
             user.Wallet = wallet;
-            await _saveUsers.SaveAllAsync(users);
+            await _userRepository.SaveAllAsync(users);
         }
 
         public async Task<User?> GetUserAsync(string userName)
         {
-            var users = await _getUsers.GetAllAsync();
+            var users = await _userRepository.GetAllAsync();
             var user = users.SingleOrDefault(u => u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase));
             if (user == null) return null;
             return ToModel(user);
@@ -104,7 +100,7 @@ namespace Backend.Services
             if (!IsValidPassword(newPassword))
                 throw new ArgumentException("Invalid password format or length.");
 
-            var users = await _getUsers.GetAllAsync();
+            var users = await _userRepository.GetAllAsync();
             var userEntity = users.SingleOrDefault(u =>
                 u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase));
 
@@ -112,7 +108,7 @@ namespace Backend.Services
                 throw new InvalidOperationException("User not found.");
 
             userEntity.Password = newPassword.Trim();
-            await _saveUsers.SaveAllAsync(users);
+            await _userRepository.SaveAllAsync(users);
         }
 
     }
