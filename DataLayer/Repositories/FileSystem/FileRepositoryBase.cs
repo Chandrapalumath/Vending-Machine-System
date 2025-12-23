@@ -1,4 +1,6 @@
-﻿namespace DataLayer.Repositories.FileSystem
+﻿using DataLayer.ApplicationConstant;
+
+namespace DataLayer.Repositories.FileSystem
 {
     public abstract class FileRepositoryBase
     {
@@ -6,8 +8,8 @@
 
         protected FileRepositoryBase(string filePath)
         {
-            EnsureFileExists();
             _filePath = filePath;
+            EnsureFileExists();
         }
 
         protected async Task<string[]> ReadAllLinesAsync()
@@ -26,11 +28,11 @@
                 return;
 
             var dir = Path.GetDirectoryName(_filePath);
-            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            if (!string.IsNullOrEmpty(DataFilePaths.DataFolder) && !Directory.Exists(DataFilePaths.DataFolder))
             {
-                Directory.CreateDirectory(dir);
+                Directory.CreateDirectory(DataFilePaths.DataFolder);
             }
-            using var _ = File.Create(_filePath);
+            File.Create(_filePath);
         }
     }
 }

@@ -14,5 +14,6 @@ namespace Backend.Interfaces
         Task CreateUserAsync(string userName, string password);
         Task UpdateUserWalletAsync(string userName, float wallet);
         Task<User?> GetUserAsync(string userName);
+        Task UpdatePasswordAsync(string userName, string newPassword);
     }
 }

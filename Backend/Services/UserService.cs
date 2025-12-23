@@ -99,5 +99,21 @@ namespace Backend.Services
                    password.Length >= MinPasswordLength && password.Length <= MaxPasswordLength &&
                    !password.Contains(',') && !password.Contains(' ');
         }
+        public async Task UpdatePasswordAsync(string userName, string newPassword)
+        {
+            if (!IsValidPassword(newPassword))
+                throw new ArgumentException("Invalid password format or length.");
+
+            var users = await _getUsers.GetAllAsync();
+            var userEntity = users.SingleOrDefault(u =>
+                u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase));
+
+            if (userEntity == null)
+                throw new InvalidOperationException("User not found.");
+
+            userEntity.Password = newPassword.Trim();
+            await _saveUsers.SaveAllAsync(users);
+        }
+
     }
 }
