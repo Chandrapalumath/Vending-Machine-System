@@ -1,5 +1,6 @@
 ﻿using Backend.Exceptions;
 using Backend.Interfaces;
+using DataLayer.Repositories.Interfaces;
 using Vending_Machine_System.Helpers;
 using Vending_Machine_System.Models.Enums;
 
@@ -9,13 +10,11 @@ namespace Vending_Machine_System.Menus
     {
         private readonly IItemService _itemService;
         private readonly ITransactionService _transactionService;
-        private readonly IUserService _userService;
 
-        public AdminMenu(IItemService itemService, ITransactionService transactionService, IUserService userService)
+        public AdminMenu(IItemService itemService, ITransactionService transactionService)
         {
             _itemService = itemService;
             _transactionService = transactionService;
-            _userService = userService;
         }
 
         public async Task RunAsync()
@@ -74,19 +73,34 @@ namespace Vending_Machine_System.Menus
         private async Task AddItemAsync()
         {
             Console.Clear();
-            var name = InputHelper.Prompt("Item name (no ',' or '|'): ");
+            var name = InputHelper.Prompt("Enter item name (no ',' or '|'): ");
             var price = InputHelper.PromptPositiveFloat("Price: ");
             var quantity = InputHelper.PromptPositiveInt("Quantity: ");
 
-            await _itemService.AddItemAsync(name, price, quantity);
-            Console.WriteLine("Item added successfully!");
-            InputHelper.Pause();
+            try
+            {
+                await _itemService.AddItemAsync(name, price, quantity);
+                Console.WriteLine("Item added successfully!");
+                InputHelper.Pause();
+            }
+            catch (ItemValidationException exception)
+            {
+                Console.WriteLine(exception.Message);
+            }
+            catch (NegativeValueException exception)
+            {
+                Console.WriteLine(exception.Message + " cannot be negative");
+            }
+            catch (ItemAlreadyExistsException exception)
+            {
+                Console.WriteLine(exception.Message + "Already Exists");
+            }
         }
 
         private async Task RemoveItemAsync()
         {
             Console.Clear();
-            var name = InputHelper.Prompt("Item name to remove: ");
+            var name = InputHelper.Prompt("Item name to remove : ");
             await _itemService.RemoveItemAsync(name);
             Console.WriteLine("Item removed successfully!");
             InputHelper.Pause();
@@ -139,7 +153,7 @@ namespace Vending_Machine_System.Menus
         {
             Console.Clear();
             Console.WriteLine("=== RECENT TRANSACTIONS ===");
-            var transactions = await _transactionService.GetAllTransactionsAsync(5);
+            var transactions = await _transactionService.GetAllTransactionsAsync();
 
             if (!transactions.Any())
             {
@@ -148,12 +162,12 @@ namespace Vending_Machine_System.Menus
                 return;
             }
 
-            foreach (var txn in transactions)
+            foreach (var transaction in transactions)
             {
-                Console.WriteLine($"{txn.UserName,-15}  ${txn.TotalAmount,-10:F2} {txn.TimeUtc:yyyy-MM-dd HH:mm}");
-                for (int i = 0; i < txn.Items.Length; i++)
+                Console.WriteLine($"{transaction.UserName,-15}  ${transaction.TotalAmount,-10:F2} {transaction.TimeUtc:yyyy-MM-dd HH:mm}");
+                for (int i = 0; i < transaction.Items.Length; i++)
                 {
-                    Console.WriteLine($"    {txn.Items[i],-20} x{txn.Quantities[i],-3}  ${txn.Prices[i],-6:F2}");
+                    Console.WriteLine($"    {transaction.Items[i],-20} x{transaction.Quantities[i],-3}  ${transaction.Prices[i],-6:F2}");
                 }
             }
             InputHelper.Pause();

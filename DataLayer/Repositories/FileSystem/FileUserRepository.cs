@@ -37,15 +37,13 @@ namespace DataLayer.Repositories.FileSystem
         {
             if (string.IsNullOrWhiteSpace(userName)) return null;
             var users = await GetAllAsync();
-            return users.SingleOrDefault(u =>
-                u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase));
+            return users.SingleOrDefault(u => u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase));
         }
 
         internal async Task UpdateAsync(User user)
         {
             var users = await GetAllAsync();
-            var index = users.FindIndex(u =>
-                u.UserName.Equals(user.UserName, StringComparison.OrdinalIgnoreCase));
+            var index = users.FindIndex(u => u.UserName.Equals(user.UserName, StringComparison.OrdinalIgnoreCase));
             if (index >= 0)
             {
                 users[index] = user;
@@ -65,7 +63,6 @@ namespace DataLayer.Repositories.FileSystem
             return user;
         }
 
-        private static string ToLine(User user) =>
-            $"{user.UserName},{user.Password},{user.Wallet}";
+        private static string ToLine(User user) => $"{user.UserName},{user.Password},{user.Wallet}";
     }
 }

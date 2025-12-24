@@ -1,6 +1,9 @@
-﻿using Backend.Interfaces;
+﻿using Backend.ApplicationConstants;
+using Backend.Interfaces;
+using System.Security.Authentication;
 using Vending_Machine_System.Helpers;
 using Vending_Machine_System.Models.Enums;
+using Backend.Exceptions;
 
 namespace Vending_Machine_System.Menus
 {
@@ -58,17 +61,24 @@ namespace Vending_Machine_System.Menus
             Console.Write("Admin password: ");
             var password = InputHelper.PromptPassword("");
 
-            var admin = await _adminService.ValidateAdminAsync(username, password);
-            if (admin != null)
+            try
             {
-                Console.WriteLine($"Welcome, {admin.UserName}!");
-                var adminMenu = new AdminMenu(_itemService, _transactionService, _userService);
-                await adminMenu.RunAsync();
+                var admin = await _adminService.ValidateAdminAsync(username, password);
+                if (admin != null)
+                {
+                    Console.WriteLine($"Welcome, {admin.UserName}!");
+                    var adminMenu = new AdminMenu(_itemService, _transactionService);
+                    await adminMenu.RunAsync();
+                }
+                else
+                {
+                    Console.WriteLine("Invalid username or password!");
+                    InputHelper.Pause();
+                }
             }
-            else
+            catch(InvalidCredentialsException exception)
             {
-                Console.WriteLine("Invalid username or password!");
-                InputHelper.Pause();
+                Console.WriteLine(exception.Message);
             }
         }
 
@@ -118,8 +128,10 @@ namespace Vending_Machine_System.Menus
 
         private async Task SignUpAsync()
         {
-            var userName = InputHelper.Prompt("Enter username: ");
-            var password = InputHelper.PromptPassword("Enter password: ");
+            var userName = InputHelper.Prompt($"Enter username (no comma ','; length {UserValidationRules.MinUserNameLength}–{UserValidationRules.MaxUserNameLength}): ");
+
+            var password = InputHelper.PromptPassword($"Enter password (no comma ',', no spaces; length {UserValidationRules.MinPasswordLength}–{UserValidationRules.MaxPasswordLength}): ");
+
 
             try
             {

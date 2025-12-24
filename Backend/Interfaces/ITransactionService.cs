@@ -5,7 +5,7 @@ namespace Backend.Interfaces
     public interface ITransactionService
     {
         Task AddTransactionAsync(Transaction transaction);
-        Task<List<Transaction>> GetUserTransactionsAsync(string userName, int transactionNeeded);
-        Task<List<Transaction>> GetAllTransactionsAsync(int transactionNeeded);
+        Task<List<Transaction>> GetUserTransactionsAsync(string userName);
+        Task<List<Transaction>> GetAllTransactionsAsync();
     }
 }

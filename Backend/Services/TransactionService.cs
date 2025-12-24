@@ -3,49 +3,27 @@ using DataLayer.Repositories.Interfaces;
 using DataLayer_Models = DataLayer.Models;
 using Backend.Model;
 using Backend.Exceptions;
+using Backend.ApplicationConstants;
 
 namespace Backend.Services
 {
     public class TransactionService : ITransactionService
     {
-        private readonly IUserRepository _userRepository;
         private readonly ITransactionRepository _transactionRepository;
-        private readonly IItemRepository _itemRepository;
-        private const int DefaultTransactionCount = 5;
 
-        public TransactionService(IUserRepository userRepository, ITransactionRepository transactionRepository, IItemRepository itemRepository)
+        public TransactionService(ITransactionRepository transactionRepository)
         {
             _transactionRepository = transactionRepository;
-            _userRepository = userRepository;
-            _itemRepository = itemRepository;
         }
 
         public async Task AddTransactionAsync(Transaction transaction)
         {
             if (string.IsNullOrWhiteSpace(transaction.UserName)) throw new UserNotFoundException("User name is required.");
-
-            // Check this if any code smell
-            //var users = await _userRepository.GetAllAsync();
-            //var user = users.SingleOrDefault(u =>
-            //    u.UserName.Equals(transaction.UserName, StringComparison.OrdinalIgnoreCase));
-            //if (user == null) throw new UserNotFoundException("User not found.");
-
-            //var items = await _itemRepository.GetAllAsync();
-            //for (int i = 0; i < transaction.Items.Length; i++)
-            //{
-            //    var itemName = transaction.Items[i];
-            //    var item = items.FirstOrDefault(x =>
-            //        x.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
-
-            //    if (item == null || item.Quantity < transaction.Quantities[i])
-            //        throw new ItemNotFoundException($"Item {itemName} not available in required quantity.");
-            //}
-
-            var entity = ToEntity(transaction);
+            var entity = ToModel(transaction);
             await _transactionRepository.AddAsync(entity);
         }
 
-        private static DataLayer_Models.Transaction ToEntity(Transaction model)
+        private static DataLayer_Models.Transaction ToModel(Transaction model)
         {
             return new DataLayer_Models.Transaction
             {
@@ -57,24 +35,24 @@ namespace Backend.Services
                 TimeUtc = model.TimeUtc
             };
         }
-        public async Task<List<Transaction>> GetUserTransactionsAsync(string userName, int maxCount = 5)
+        public async Task<List<Transaction>> GetUserTransactionsAsync(string userName)
         {
             var transactions = await _transactionRepository.GetAllAsync();
             var userTransactions = transactions
                 .Where(t => t.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(t => t.TimeUtc)
-                .Take(maxCount)
+                .Take(TransactionRules.DefaultTransactionCount)
                 .Select(ToModel)
                 .ToList();
             return userTransactions;
         }
 
-        public async Task<List<Transaction>> GetAllTransactionsAsync(int maxCount = 5)
+        public async Task<List<Transaction>> GetAllTransactionsAsync()
         {
             var transactions = await _transactionRepository.GetAllAsync();
             return transactions
                 .OrderByDescending(t => t.TimeUtc)
-                .Take(maxCount)
+                .Take(TransactionRules.DefaultTransactionCount)
                 .Select(ToModel)
                 .ToList();
         }

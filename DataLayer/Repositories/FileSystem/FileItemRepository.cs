@@ -31,7 +31,7 @@ namespace DataLayer.Repositories.FileSystem
             var lines = items.Select(ToLine).ToList();
             await WriteAllLinesAsync(lines);
         }
-        internal async Task<Item?> GetByNameAsync(string name)
+        public async Task<Item?> GetByNameAsync(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) return null;
             var items = await GetAllAsync();

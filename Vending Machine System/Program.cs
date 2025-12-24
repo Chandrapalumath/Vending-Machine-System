@@ -18,7 +18,7 @@ namespace UserInterface
             IUserService userService = new UserService(userRepo);
             IItemService itemService = new ItemService(itemRepo);
             IAdminService adminservice = new AdminService(adminrepo);
-            ITransactionService transactionService = new TransactionService(userRepo,transactionRepo,itemRepo);
+            ITransactionService transactionService = new TransactionService(transactionRepo);
 
             var mainMenu = new MainMenu(userService, itemService, transactionService, adminservice);
             await mainMenu.StartAsync();

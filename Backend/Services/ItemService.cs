@@ -23,8 +23,7 @@ namespace Backend.Services
 
         public async Task<Item?> GetItemByNameAsync(string name)
         {
-            var items = await _itemRepository.GetAllAsync();
-            var item = items.SingleOrDefault(item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            var item = await _itemRepository.GetByNameAsync(name);
             if (item == null) return null;
             return ToModel(item);
         }
@@ -35,15 +34,13 @@ namespace Backend.Services
             if (price < 0) throw new NegativeValueException("Price");
             if (quantity < 0) throw new NegativeValueException("Quantity");
 
-            var items = await _itemRepository.GetAllAsync();
-            if (items.Any(item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+            var items = await _itemRepository.GetByNameAsync(name);
+            if (items != null)
                 throw new ItemAlreadyExistsException(name);
 
             var item = new DataLayer_Model.Item { Name = name.Trim(), Price = price, Quantity = quantity };
             await _itemRepository.AddAsync(item);
         }
-
-        // Check hasvalue and value in nullables
         public async Task UpdateItemAsync(string name, string? newName, float? newPrice, int? newQuantity)
         {
             var items = await _itemRepository.GetAllAsync();

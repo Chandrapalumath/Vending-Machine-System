@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Backend.Exceptions
 {
-    internal class InvalidCredentialsException : Exception
+    public class InvalidCredentialsException : Exception
     {
         public InvalidCredentialsException(string message) : base(message) { }
     }

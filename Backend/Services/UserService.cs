@@ -1,19 +1,15 @@
 ﻿using Backend.Interfaces;
 using DataLayer.Repositories.Interfaces;
-using entity = DataLayer.Models;
+using DataLayer_Models = DataLayer.Models;
 using Backend.Model;
 using Backend.Exceptions;
+using Backend.ApplicationConstants;
 
 namespace Backend.Services
 {
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
-        private const int MinUserNameLength = 3;
-        private const int MaxUserNameLength = 30;
-        private const int MinPasswordLength = 12;
-        private const int MaxPasswordLength = 20;
-
         public UserService(IUserRepository userRepository)
         {
             _userRepository = userRepository;
@@ -24,18 +20,16 @@ namespace Backend.Services
             if (!IsValidUserName(userName) || !IsValidPassword(password))
                 return null;
 
-            var users = await _userRepository.GetAllAsync();
-            var user = users.SingleOrDefault(u =>
-                u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase) &&
-                u.Password == password);
+            var user = await _userRepository.GetByUserNameAsync(userName);
             if(user == null) return null;
             return ToModel(user);
         }
 
         public async Task<bool> IsUserExistsAsync(string userName)
         {
-            var users = await _userRepository.GetAllAsync();
-            return users.Any(u => u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase));
+            var user = await _userRepository.GetByUserNameAsync(userName);
+            if(user == null) return false;
+            return true;
         }
 
         public async Task CreateUserAsync(string userName, string password)
@@ -47,7 +41,7 @@ namespace Backend.Services
             if (await IsUserExistsAsync(userName))
                 throw new UserNotFoundException("Username already exists.");
 
-            var newUser = new entity.User
+            var newUser = new DataLayer_Models.User
             {
                 UserName = userName.Trim(),
                 Password = password.Trim(),
@@ -77,14 +71,13 @@ namespace Backend.Services
             return ToModel(user);
         }
 
-        private static User ToModel(entity.User entity) =>
-            new User(entity.UserName, entity.Password, entity.Wallet);
+        private static User ToModel(DataLayer_Models.User entity) => new User(entity.UserName, entity.Password, entity.Wallet);
 
         private static bool IsValidUserName(string userName)
         {
             userName = userName.Trim();
             return !string.IsNullOrWhiteSpace(userName) &&
-                   userName.Length >= MinUserNameLength && userName.Length <= MaxUserNameLength &&
+                   userName.Length >= UserValidationRules.MinUserNameLength && userName.Length <= UserValidationRules.MaxUserNameLength &&
                    !userName.Contains(',');
         }
 
@@ -92,7 +85,7 @@ namespace Backend.Services
         {
             password = password.Trim();
             return !string.IsNullOrWhiteSpace(password) &&
-                   password.Length >= MinPasswordLength && password.Length <= MaxPasswordLength &&
+                   password.Length >= UserValidationRules.MinPasswordLength && password.Length <= UserValidationRules.MaxPasswordLength &&
                    !password.Contains(',') && !password.Contains(' ');
         }
         public async Task UpdatePasswordAsync(string userName, string newPassword)

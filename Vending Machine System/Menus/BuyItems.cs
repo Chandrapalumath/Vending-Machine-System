@@ -1,80 +1,25 @@
 ﻿using Backend.Interfaces;
 using Backend.Model;
-using System.Xml.Linq;
 using Vending_Machine_System.Helpers;
-using Vending_Machine_System.Models.Enums;
 
 namespace Vending_Machine_System.Menus
 {
-    public class UserMenu
+    public class BuyItems
     {
-        private User _currentUser;
         private readonly IItemService _itemService;
+        private readonly User _currentUser;
         private readonly ITransactionService _transactionService;
         private readonly IUserService _userService;
-
-        public UserMenu(User currentUser, IItemService itemService, ITransactionService transactionService, IUserService userService)
+        private readonly Account _accountService;
+        public BuyItems(IItemService itemService, ITransactionService transactionService, IUserService userService, User user)
         {
-            _currentUser = currentUser;
+            _currentUser = user;
             _itemService = itemService;
             _transactionService = transactionService;
             _userService = userService;
+            _accountService = new Account(_transactionService, _userService, _currentUser);
         }
-
-        public async Task RunAsync()
-        {
-            while (true)
-            {
-                Console.Clear();
-                Console.WriteLine($"{_currentUser.UserName,-20} Wallet: ${_currentUser.Wallet,-10:F2}  {DateTime.Now:HH:mm:ss}");
-                ShowMenu();
-                var choice = InputHelper.PromptInt("Choice", 1, (int)UserMenuOption.Exit);
-
-                try
-                {
-                    switch ((UserMenuOption)choice)
-                    {
-                        case UserMenuOption.ShowItemList: await ShowItemListAsync(); break;
-                        case UserMenuOption.BuyItem: await BuyItemsAsync(); break;
-                        case UserMenuOption.AddMoney: await AddMoneyAsync(); break;
-                        case UserMenuOption.TransactionHistory: await ShowUserTransactionsAsync(); break;
-                        case UserMenuOption.ResetPassword: await ResetPasswordAsync(); break;
-                        case UserMenuOption.Exit: return;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error: {ex.Message}");
-                    InputHelper.Pause();
-                }
-            }
-        }
-
-        private static void ShowMenu()
-        {
-            Console.WriteLine("\n1. Item List");
-            Console.WriteLine("2. Buy Items");
-            Console.WriteLine("3. Add Money");
-            Console.WriteLine("4. My Transactions");
-            Console.WriteLine("5. Reset Password");
-            Console.WriteLine("6. Logout");
-        }
-
-        private async Task ShowItemListAsync()
-        {
-            var items = await _itemService.GetAllItemsAsync();
-            Console.WriteLine("\n=== AVAILABLE ITEMS ===");
-            Console.WriteLine("{0,-4} {1,-20} {2,-8} {3,-8}", "ID", "Item", "Price", "Stock");
-            Console.WriteLine(new string('-', 45));
-
-            for (int i = 0; i < items.Count; i++)
-            {
-                if (items[i].Quantity > 0)
-                    Console.WriteLine("{0,-4} {1,-20} ${2,-7:F2} {3,-7}", i, items[i].Name, items[i].Price, items[i].Quantity);
-            }
-            InputHelper.Pause();
-        }
-        private async Task BuyItemsAsync()
+        public async Task BuyItemsAsync()
         {
             var chosenItems = new List<string>();
             var chosenPrices = new List<float>();
@@ -167,7 +112,7 @@ namespace Vending_Machine_System.Menus
                     Console.WriteLine("Insufficient wallet balance.");
                     if (InputHelper.Confirm("Add money to wallet?"))
                     {
-                        await AddMoneyAsync();
+                        await _accountService.AddMoneyAsync();
                         continue;
                     }
 
@@ -206,8 +151,9 @@ namespace Vending_Machine_System.Menus
                     item.Quantity -= kvp.Value;
                 }
 
-                foreach (var item in finalItems) { 
-                    await _itemService.UpdateItemAsync(item.Name, null, null, item.Quantity); 
+                foreach (var item in finalItems)
+                {
+                    await _itemService.UpdateItemAsync(item.Name, null, null, item.Quantity);
                 }
 
                 _currentUser.Wallet -= totalAmount;
@@ -227,86 +173,6 @@ namespace Vending_Machine_System.Menus
                 InputHelper.Pause();
                 return;
             }
-        }
-
-        private async Task AddMoneyAsync()
-        {
-            var amount = InputHelper.PromptPositiveFloat("Amount to add: ");
-            var newWallet = _currentUser.Wallet + amount;
-
-            try
-            {
-                await _userService.UpdateUserWalletAsync(_currentUser.UserName, newWallet);
-                _currentUser.Wallet = newWallet;
-                Console.WriteLine($"Added ${amount:F2}! New balance: ${_currentUser.Wallet:F2}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to add money: {ex.Message}");
-            }
-            InputHelper.Pause();
-        }
-
-        private async Task ShowUserTransactionsAsync()
-        {
-            Console.Clear();
-            Console.WriteLine("=== TRANSACTIONS ===");
-            var transactions = await _transactionService.GetUserTransactionsAsync(_currentUser.UserName, 5);
-
-            if (!transactions.Any())
-            {
-                Console.WriteLine("No transactions found.");
-                InputHelper.Pause();
-                return;
-            }
-
-            Console.WriteLine(new string('═', 70));
-            foreach (var txn in transactions)
-            {
-                Console.WriteLine($"${txn.TotalAmount,-8:F2}  {txn.TimeUtc:yyyy-MM-dd HH:mm}");
-                for (int i = 0; i < txn.Items.Length; i++)
-                {
-                    Console.WriteLine($"   {txn.Items[i],-20}  {txn.Quantities[i],-3}   ${txn.Prices[i],-6:F2}");
-                }
-            }
-            InputHelper.Pause();
-        }
-
-        private async Task ResetPasswordAsync()
-        {
-            Console.Clear();
-            Console.WriteLine("=== RESET PASSWORD ===");
-
-            var currentPassword = InputHelper.PromptPassword("Current password: ");
-            var user = await _userService.ValidateUserAsync(_currentUser.UserName, currentPassword);
-
-            if (user == null)
-            {
-                Console.WriteLine("Current password is incorrect!");
-                InputHelper.Pause();
-                return;
-            }
-
-            var newPassword = InputHelper.PromptPassword("New password: ");
-            var confirmPassword = InputHelper.PromptPassword("Confirm password: ");
-
-            if (newPassword != confirmPassword)
-            {
-                Console.WriteLine("Passwords do not match!");
-                InputHelper.Pause();
-                return;
-            }
-
-            try
-            {
-                await _userService.UpdatePasswordAsync(_currentUser.UserName, newPassword);
-                Console.WriteLine("Password updated successfully!");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Password update failed: {ex.Message}");
-            }
-            InputHelper.Pause();
         }
 
     }
