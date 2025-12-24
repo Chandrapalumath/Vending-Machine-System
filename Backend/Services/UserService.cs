@@ -22,6 +22,7 @@ namespace Backend.Services
 
             var user = await _userRepository.GetByUserNameAsync(userName);
             if(user == null) return null;
+            if(user.Password != password) return null;
             return ToModel(user);
         }
 
