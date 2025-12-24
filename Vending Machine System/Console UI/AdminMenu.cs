@@ -1,5 +1,6 @@
 ﻿using Backend.Exceptions;
 using Backend.Interfaces;
+using Backend.Services;
 using DataLayer.Repositories.Interfaces;
 using Vending_Machine_System.Helpers;
 using Vending_Machine_System.Models.Enums;
@@ -10,11 +11,13 @@ namespace Vending_Machine_System.Menus
     {
         private readonly IItemService _itemService;
         private readonly ITransactionService _transactionService;
+        private readonly IAdminService _adminService;
 
-        public AdminMenu(IItemService itemService, ITransactionService transactionService)
+        public AdminMenu(IItemService itemService, ITransactionService transactionService, IAdminService adminService)
         {
             _itemService = itemService;
             _transactionService = transactionService;
+            _adminService = adminService;
         }
 
         public async Task RunAsync()
@@ -34,6 +37,7 @@ namespace Vending_Machine_System.Menus
                         case AdminMenuOption.RemoveItem: await RemoveItemAsync(); break;
                         case AdminMenuOption.UpdateItem: await UpdateItemAsync(); break;
                         case AdminMenuOption.TransactionHistory: await ShowTransactionsAsync(); break;
+                        case AdminMenuOption.ChangePassword: await ChangePasswordAsync(); break;
                         case AdminMenuOption.Exit: return;
                     }
                 }
@@ -45,6 +49,28 @@ namespace Vending_Machine_System.Menus
             }
         }
 
+        public async Task ChangePasswordAsync()
+        {
+            Console.Write("Enter new Password ");
+            var newPassword = Console.ReadLine()?.Trim();
+            Console.Write("Confirm password: ");
+            var password = InputHelper.PromptPassword("");
+            if (String.IsNullOrWhiteSpace(newPassword) || String.IsNullOrWhiteSpace(password))
+            {
+                Console.WriteLine("Values cannot be null");
+                return;
+            }
+            try
+            {
+                await _adminService.UpdatePasswordAsync(password);
+                Console.WriteLine("Password Updated! ");
+                InputHelper.Pause();
+            }
+            catch (InvalidCredentialsException exception)
+            {
+                Console.WriteLine(exception.Message);
+            }
+        }
         private static void ShowMenu()
         {
             Console.WriteLine("=== ADMIN PANEL ===");
@@ -53,7 +79,8 @@ namespace Vending_Machine_System.Menus
             Console.WriteLine("3. Remove Item");
             Console.WriteLine("4. Update Item");
             Console.WriteLine("5. Transaction History");
-            Console.WriteLine("6. Exit");
+            Console.WriteLine("6. Change Password");
+            Console.WriteLine("7. Exit");
         }
 
         private async Task ShowItemListAsync()

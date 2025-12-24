@@ -15,7 +15,7 @@ namespace Backend.Services
         {
             _adminRepository = adminRepository;
         }
-        public async Task CreateAdminAsync(string? userName, string? password)
+        public async Task CreateAdminAsync(string userName, string password)
         {
             var admin = await _adminRepository.GetAllAsync();
             if(admin.Count == 0)
@@ -27,19 +27,29 @@ namespace Backend.Services
 
         public async Task<Admin?> ValidateAdminAsync(string? userName, string? password)
         {
-            if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(userName))
+            if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(password))
             {
                 throw new InvalidCredentialsException("Invalid Credentials");
             }
             await CreateAdminAsync(userName, password);
             var admin = await _adminRepository.GetAllAsync();
-            var user = admin.SingleOrDefault(u =>
-                u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase) &&
-                u.Password == password);
+            var user = admin.SingleOrDefault(u => u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase) && u.Password == password);
 
             if (user == null) return null;
             if (admin.Count == 0) return null;
             return ToModel(admin[0]);
+        }
+        public async Task UpdatePasswordAsync(string? password)
+        {
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                throw new InvalidCredentialsException("Invalid Credentials");
+            }
+            var admin = await _adminRepository.GetAllAsync();
+            var user = admin.SingleOrDefault();
+            if (user == null) throw new InvalidCredentialsException("Invalid Credentials");
+            user.Password = password;
+            await _adminRepository.AddAsync(user);
         }
         public Admin ToModel(DataLayer_Models.Admin admin) { 
             return new Admin(admin.UserName,admin.Password);

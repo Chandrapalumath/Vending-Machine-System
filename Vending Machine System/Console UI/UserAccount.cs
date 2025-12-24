@@ -4,12 +4,12 @@ using Vending_Machine_System.Helpers;
 
 namespace Vending_Machine_System.Menus
 {
-    public class Account
+    public class UserAccount
     {
         private readonly User _currentUser;
         private readonly ITransactionService _transactionService;
         private readonly IUserService _userService;
-        public Account(ITransactionService transactionService, IUserService userService, User user)
+        public UserAccount(ITransactionService transactionService, IUserService userService, User user)
         {
             _transactionService = transactionService;
             _userService = userService;

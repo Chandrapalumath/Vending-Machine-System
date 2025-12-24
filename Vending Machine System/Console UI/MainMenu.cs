@@ -67,7 +67,7 @@ namespace Vending_Machine_System.Menus
                 if (admin != null)
                 {
                     Console.WriteLine($"Welcome, {admin.UserName}!");
-                    var adminMenu = new AdminMenu(_itemService, _transactionService);
+                    var adminMenu = new AdminMenu(_itemService, _transactionService,_adminService);
                     await adminMenu.RunAsync();
                 }
                 else

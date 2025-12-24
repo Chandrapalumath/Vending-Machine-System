@@ -7,6 +7,7 @@
         RemoveItem,
         UpdateItem,
         TransactionHistory,
+        ChangePassword,
         Exit
     }
 }

@@ -4,20 +4,20 @@ using Vending_Machine_System.Helpers;
 
 namespace Vending_Machine_System.Menus
 {
-    public class BuyItems
+    public class UserShopping
     {
         private readonly IItemService _itemService;
         private readonly User _currentUser;
         private readonly ITransactionService _transactionService;
         private readonly IUserService _userService;
-        private readonly Account _accountService;
-        public BuyItems(IItemService itemService, ITransactionService transactionService, IUserService userService, User user)
+        private readonly UserAccount _accountService;
+        public UserShopping(IItemService itemService, ITransactionService transactionService, IUserService userService, User user)
         {
             _currentUser = user;
             _itemService = itemService;
             _transactionService = transactionService;
             _userService = userService;
-            _accountService = new Account(_transactionService, _userService, _currentUser);
+            _accountService = new UserAccount(_transactionService, _userService, _currentUser);
         }
         public async Task BuyItemsAsync()
         {

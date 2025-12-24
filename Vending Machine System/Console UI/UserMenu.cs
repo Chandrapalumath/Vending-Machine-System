@@ -10,16 +10,16 @@ namespace Vending_Machine_System.Menus
         private User _currentUser;
         private readonly IItemService _itemService;
         private readonly IUserService _userService;
-        private readonly BuyItems _buyItems;
-        private readonly Account _account;
+        private readonly UserShopping _buyItems;
+        private readonly UserAccount _account;
 
         public UserMenu(User currentUser, IItemService itemService, ITransactionService transactionService, IUserService userService)
         {
             _currentUser = currentUser;
             _itemService = itemService;
             _userService = userService;
-            _buyItems = new BuyItems(itemService, transactionService, userService, currentUser);
-            _account = new Account(transactionService, userService, currentUser);
+            _buyItems = new UserShopping(itemService, transactionService, userService, currentUser);
+            _account = new UserAccount(transactionService, userService, currentUser);
         }
 
         public async Task RunAsync()
