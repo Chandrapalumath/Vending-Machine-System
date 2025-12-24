@@ -1,6 +1,7 @@
 ﻿using DataLayer.ApplicationConstant;
 using DataLayer.Repositories.Interfaces;
 using DataLayer.Models;
+
 namespace DataLayer.Repositories.FileSystem
 {
     public class FileTransactionRepository : FileRepositoryBase, ITransactionRepository

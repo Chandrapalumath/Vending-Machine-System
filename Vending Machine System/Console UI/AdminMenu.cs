@@ -1,7 +1,5 @@
 ﻿using Backend.Exceptions;
 using Backend.Interfaces;
-using Backend.Services;
-using DataLayer.Repositories.Interfaces;
 using Vending_Machine_System.Helpers;
 using Vending_Machine_System.Models.Enums;
 

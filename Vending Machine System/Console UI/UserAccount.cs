@@ -29,12 +29,12 @@ namespace Vending_Machine_System.Menus
             }
 
             Console.WriteLine(new string('═', 70));
-            foreach (var txn in transactions)
+            foreach (var transaction in transactions)
             {
-                Console.WriteLine($"${txn.TotalAmount,-8:F2}  {txn.TimeUtc:yyyy-MM-dd HH:mm}");
-                for (int i = 0; i < txn.Items.Length; i++)
+                Console.WriteLine($"${transaction.TotalAmount,-8:F2}  {transaction.TimeUtc:yyyy-MM-dd HH:mm}");
+                for (int i = 0; i < transaction.Items.Length; i++)
                 {
-                    Console.WriteLine($"   {txn.Items[i],-20}  {txn.Quantities[i],-3}   ${txn.Prices[i],-6:F2}");
+                    Console.WriteLine($"   {transaction.Items[i],-20}  {transaction.Quantities[i],-3}   ${transaction.Prices[i],-6:F2}");
                 }
             }
             InputHelper.Pause();

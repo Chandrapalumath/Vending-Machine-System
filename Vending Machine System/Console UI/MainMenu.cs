@@ -1,9 +1,7 @@
 ﻿using Backend.ApplicationConstants;
 using Backend.Interfaces;
-using System.Security.Authentication;
 using Vending_Machine_System.Helpers;
 using Vending_Machine_System.Models.Enums;
-using Backend.Exceptions;
 
 namespace Vending_Machine_System.Menus
 {
@@ -76,7 +74,7 @@ namespace Vending_Machine_System.Menus
                     InputHelper.Pause();
                 }
             }
-            catch(InvalidCredentialsException exception)
+            catch(Exception exception)
             {
                 Console.WriteLine(exception.Message);
             }
@@ -95,6 +93,7 @@ namespace Vending_Machine_System.Menus
             {
                 case 1: await LoginAsync(); break;
                 case 2: await SignUpAsync(); break;
+                case 3: break;
             }
         }
 

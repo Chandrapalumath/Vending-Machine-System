@@ -143,12 +143,12 @@ namespace Vending_Machine_System.Menus
                     return;
                 }
 
-                foreach (var kvp in cartQuantities)
+                foreach (var items in cartQuantities)
                 {
                     var item = finalItems.First(x =>
-                        x.Name.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase));
+                        x.Name.Equals(items.Key, StringComparison.OrdinalIgnoreCase));
 
-                    item.Quantity -= kvp.Value;
+                    item.Quantity -= items.Value;
                 }
 
                 foreach (var item in finalItems)

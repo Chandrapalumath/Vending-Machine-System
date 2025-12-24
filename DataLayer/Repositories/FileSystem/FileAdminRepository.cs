@@ -1,6 +1,7 @@
 ﻿using DataLayer.ApplicationConstant;
 using DataLayer.Models;
 using DataLayer.Repositories.Interfaces;
+
 namespace DataLayer.Repositories.FileSystem
 {
     public class FileAdminRepository : FileRepositoryBase, IAdminRepository
