@@ -40,17 +40,6 @@ namespace DataLayer.Repositories.FileSystem
             return users.SingleOrDefault(u => u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase));
         }
 
-        internal async Task UpdateAsync(User user)
-        {
-            var users = await GetAllAsync();
-            var index = users.FindIndex(u => u.UserName.Equals(user.UserName, StringComparison.OrdinalIgnoreCase));
-            if (index >= 0)
-            {
-                users[index] = user;
-                await SaveAllAsync(users);
-            }
-        }
-
         private static User ParseUser(string line)
         {
             var parts = line.Split(',', StringSplitOptions.TrimEntries);

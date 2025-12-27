@@ -1,6 +1,6 @@
 ﻿namespace Vending_Machine_System.Models.Enums
 {
-    public enum UserMenuOption
+    internal enum UserMenuOption : Byte
     {
         ShowItemList = 1,
         BuyItem,

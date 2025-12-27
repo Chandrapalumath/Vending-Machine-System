@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Vending_Machine_System.Models.Enums
 {
-    public enum MainMenuOption
+    internal enum MainMenuOption : Byte
     {
         AdminLogin = 1,
         UserLogin,

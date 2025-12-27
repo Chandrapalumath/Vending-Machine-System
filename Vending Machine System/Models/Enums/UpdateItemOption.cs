@@ -1,6 +1,6 @@
 ﻿namespace Vending_Machine_System.Models.Enums
 {
-    public enum UpdateItemOption
+    internal enum UpdateItemOption : Byte
     {
         ItemName = 1,
         ItemPrice,

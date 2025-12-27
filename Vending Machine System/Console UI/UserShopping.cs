@@ -11,13 +11,13 @@ namespace Vending_Machine_System.Menus
         private readonly ITransactionService _transactionService;
         private readonly IUserService _userService;
         private readonly UserAccount _accountService;
-        public UserShopping(IItemService itemService, ITransactionService transactionService, IUserService userService, User user)
+        public UserShopping(IItemService itemService, ITransactionService transactionService, IUserService userService, User user ,UserAccount accountService)
         {
             _currentUser = user;
             _itemService = itemService;
             _transactionService = transactionService;
             _userService = userService;
-            _accountService = new UserAccount(_transactionService, _userService, _currentUser);
+            _accountService = accountService;
         }
         public async Task BuyItemsAsync()
         {
@@ -106,16 +106,14 @@ namespace Vending_Machine_System.Menus
                 Console.Clear();
                 Console.WriteLine($"Total Amount: ${totalAmount:F2}");
                 Console.WriteLine($"Wallet Balance: ${_currentUser.Wallet:F2}");
-
                 if (totalAmount > _currentUser.Wallet)
                 {
                     Console.WriteLine("Insufficient wallet balance.");
                     if (InputHelper.Confirm("Add money to wallet?"))
                     {
-                        await _accountService.AddMoneyAsync();
+                        await _accountService.AddMoneyAsync(_currentUser);
                         continue;
                     }
-
                     Console.WriteLine("Order cancelled.");
                     InputHelper.Pause();
                     return;

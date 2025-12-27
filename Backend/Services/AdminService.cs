@@ -15,7 +15,7 @@ namespace Backend.Services
         {
             _adminRepository = adminRepository;
         }
-        public async Task CreateAdminAsync(string userName, string password)
+        public async Task CreateAdminAsync()
         {
             var admin = await _adminRepository.GetAllAsync();
             if(admin.Count == 0)
@@ -31,7 +31,6 @@ namespace Backend.Services
             {
                 throw new InvalidCredentialsException("Invalid Credentials");
             }
-            await CreateAdminAsync(userName, password);
             var admin = await _adminRepository.GetAllAsync();
             var user = admin.SingleOrDefault(u => u.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase) && u.Password == password);
 

@@ -39,26 +39,6 @@ namespace DataLayer.Repositories.FileSystem
                 i.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         }
 
-        internal async Task UpdateAsync(Item item)
-        {
-            var items = await GetAllAsync();
-            var index = items.FindIndex(i =>
-                i.Name.Equals(item.Name, StringComparison.OrdinalIgnoreCase));
-            if (index >= 0)
-            {
-                items[index] = item;
-                await SaveAllAsync(items);
-            }
-        }
-
-        internal async Task DeleteAsync(string name)
-        {
-            var items = await GetAllAsync();
-            items.RemoveAll(i =>
-                i.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-            await SaveAllAsync(items);
-        }
-
         private static Item ParseItem(string line)
         {
             var parts = line.Split(',', StringSplitOptions.TrimEntries);

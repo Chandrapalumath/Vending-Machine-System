@@ -6,20 +6,18 @@ namespace Vending_Machine_System.Menus
 {
     public class UserAccount
     {
-        private readonly User _currentUser;
         private readonly ITransactionService _transactionService;
         private readonly IUserService _userService;
-        public UserAccount(ITransactionService transactionService, IUserService userService, User user)
+        public UserAccount(ITransactionService transactionService, IUserService userService)
         {
             _transactionService = transactionService;
             _userService = userService;
-            _currentUser = user;
         }
-        public async Task ShowUserTransactionsAsync()
+        public async Task ShowUserTransactionsAsync(User currentUser)
         {
             Console.Clear();
             Console.WriteLine("=== TRANSACTIONS ===");
-            var transactions = await _transactionService.GetUserTransactionsAsync(_currentUser.UserName);
+            var transactions = await _transactionService.GetUserTransactionsAsync(currentUser.UserName);
 
             if (!transactions.Any())
             {
@@ -39,16 +37,16 @@ namespace Vending_Machine_System.Menus
             }
             InputHelper.Pause();
         }
-        public async Task AddMoneyAsync()
+        public async Task AddMoneyAsync(User currentUser)
         {
             var amount = InputHelper.PromptPositiveFloat("Amount to add: ");
-            var newWallet = _currentUser.Wallet + amount;
+            var newWallet = currentUser.Wallet + amount;
 
             try
             {
-                await _userService.UpdateUserWalletAsync(_currentUser.UserName, newWallet);
-                _currentUser.Wallet = newWallet;
-                Console.WriteLine($"Added ${amount:F2}! New balance: ${_currentUser.Wallet:F2}");
+                await _userService.UpdateUserWalletAsync(currentUser.UserName, newWallet);
+                currentUser.Wallet = newWallet;
+                Console.WriteLine($"Added ${amount:F2}! New balance: ${currentUser.Wallet:F2}");
             }
             catch (Exception ex)
             {

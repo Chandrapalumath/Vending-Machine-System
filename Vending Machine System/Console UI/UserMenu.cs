@@ -2,6 +2,7 @@
 using Backend.Model;
 using Vending_Machine_System.Helpers;
 using Vending_Machine_System.Models.Enums;
+using Vending_Machine_System.ApplicationConstants;
 
 namespace Vending_Machine_System.Menus
 {
@@ -13,13 +14,13 @@ namespace Vending_Machine_System.Menus
         private readonly UserShopping _buyItems;
         private readonly UserAccount _account;
 
-        public UserMenu(User currentUser, IItemService itemService, ITransactionService transactionService, IUserService userService)
+        public UserMenu(User currentUser, IItemService itemService, ITransactionService transactionService, IUserService userService, UserShopping usershopping, UserAccount userAccount)
         {
             _currentUser = currentUser;
             _itemService = itemService;
             _userService = userService;
-            _buyItems = new UserShopping(itemService, transactionService, userService, currentUser);
-            _account = new UserAccount(transactionService, userService, currentUser);
+            _buyItems = usershopping;
+            _account = userAccount;
         }
 
         public async Task RunAsync()
@@ -29,7 +30,7 @@ namespace Vending_Machine_System.Menus
                 Console.Clear();
                 Console.WriteLine($"{_currentUser.UserName,-20} Wallet: ${_currentUser.Wallet,-10:F2}  {DateTime.Now:HH:mm:ss}");
                 ShowMenu();
-                var choice = InputHelper.PromptInt("Choice", 1, (int)UserMenuOption.Exit);
+                var choice = InputHelper.PromptInt("Choice", Constant.UserMenuMin, Constant.UserMenuMax);
 
                 try
                 {
@@ -37,8 +38,8 @@ namespace Vending_Machine_System.Menus
                     {
                         case UserMenuOption.ShowItemList: await ShowItemListAsync(); break;
                         case UserMenuOption.BuyItem: await _buyItems.BuyItemsAsync(); break;
-                        case UserMenuOption.AddMoney: await _account.AddMoneyAsync(); break;
-                        case UserMenuOption.TransactionHistory: await _account.ShowUserTransactionsAsync(); break;
+                        case UserMenuOption.AddMoney: await _account.AddMoneyAsync(_currentUser); break;
+                        case UserMenuOption.TransactionHistory: await _account.ShowUserTransactionsAsync(_currentUser); break;
                         case UserMenuOption.ResetPassword: await ResetPasswordAsync(); break;
                         case UserMenuOption.Exit: return;
                     }

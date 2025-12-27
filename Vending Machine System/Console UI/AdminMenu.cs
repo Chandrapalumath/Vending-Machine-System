@@ -1,5 +1,6 @@
 ﻿using Backend.Exceptions;
 using Backend.Interfaces;
+using Vending_Machine_System.ApplicationConstants;
 using Vending_Machine_System.Helpers;
 using Vending_Machine_System.Models.Enums;
 
@@ -24,7 +25,7 @@ namespace Vending_Machine_System.Menus
             {
                 Console.Clear();
                 ShowMenu();
-                var choice = InputHelper.PromptInt("Choice", 1, (int)AdminMenuOption.Exit);
+                var choice = InputHelper.PromptInt("Choice", Constant.AdminMenuMin, Constant.AdminMenuMax);
 
                 try
                 {
@@ -44,29 +45,6 @@ namespace Vending_Machine_System.Menus
                     Console.WriteLine($"Error: {ex.Message}");
                     InputHelper.Pause();
                 }
-            }
-        }
-
-        public async Task ChangePasswordAsync()
-        {
-            Console.Write("Enter new Password ");
-            var newPassword = Console.ReadLine()?.Trim();
-            Console.Write("Confirm password: ");
-            var password = InputHelper.PromptPassword("");
-            if (String.IsNullOrWhiteSpace(newPassword) || String.IsNullOrWhiteSpace(password))
-            {
-                Console.WriteLine("Values cannot be null");
-                return;
-            }
-            try
-            {
-                await _adminService.UpdatePasswordAsync(password);
-                Console.WriteLine("Password Updated! ");
-                InputHelper.Pause();
-            }
-            catch (InvalidCredentialsException exception)
-            {
-                Console.WriteLine(exception.Message);
             }
         }
         private static void ShowMenu()
@@ -120,6 +98,7 @@ namespace Vending_Machine_System.Menus
             {
                 Console.WriteLine(exception.Message + "Already Exists");
             }
+            InputHelper.Pause();
         }
 
         private async Task RemoveItemAsync()
@@ -127,7 +106,7 @@ namespace Vending_Machine_System.Menus
             Console.Clear();
             var name = InputHelper.Prompt("Item name to remove : ");
             await _itemService.RemoveItemAsync(name);
-            Console.WriteLine("Item removed successfully!");
+            Console.WriteLine("Item removed successfully if Exists!");
             InputHelper.Pause();
         }
 
@@ -196,6 +175,28 @@ namespace Vending_Machine_System.Menus
                 }
             }
             InputHelper.Pause();
+        }
+        public async Task ChangePasswordAsync()
+        {
+            Console.Write("Enter new Password ");
+            var newPassword = Console.ReadLine()?.Trim();
+            Console.Write("Confirm password: ");
+            var password = InputHelper.PromptPassword("");
+            if (String.IsNullOrWhiteSpace(newPassword) || String.IsNullOrWhiteSpace(password))
+            {
+                Console.WriteLine("Values cannot be null");
+                return;
+            }
+            try
+            {
+                await _adminService.UpdatePasswordAsync(password);
+                Console.WriteLine("Password Updated! ");
+                InputHelper.Pause();
+            }
+            catch (InvalidCredentialsException exception)
+            {
+                Console.WriteLine(exception.Message);
+            }
         }
     }
 }
